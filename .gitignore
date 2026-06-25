@@ -1,0 +1,33 @@
+# Python
+
+__pycache__/
+
+*.pyc
+
+# Virtual environment
+
+venv/
+
+.env/
+
+# Dataset
+
+data/
+
+# Model weights
+
+*.pth
+
+*.pt
+
+# Outputs
+
+outputs/
+
+# Jupyter
+
+.ipynb_checkpoints/
+
+# macOS
+
+.DS_Store
