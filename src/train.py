@@ -43,6 +43,7 @@ elif torch.backends.mps.is_available():
     device = torch.device("mps")
 else:
     device = torch.device("cpu")
+
 print(f"\n사용 장치 : {device}")
 
 
@@ -69,9 +70,8 @@ train_loss_history = []
 valid_loss_history = []
 valid_acc_history = []
 
-# ======================================================
+
 # Validation
-# ======================================================
 def evaluate():
 
     model.eval()
@@ -81,6 +81,7 @@ def evaluate():
     total = 0
 
     with torch.no_grad():
+
         for images, labels in valid_loader:
 
             images = images.to(device)
@@ -92,10 +93,7 @@ def evaluate():
             correct += (pred == labels).sum().item()
             total += labels.size(0)
 
-    return (
-        total_loss / len(valid_loader),
-        correct / total
-    )
+    return total_loss / len(valid_loader), correct / total
 
 
 # Train
@@ -105,14 +103,18 @@ def train():
     patience = 0
 
     for epoch in range(EPOCHS):
+
         model.train()
         train_loss = 0
+        correct = 0
+        total = 0
         loop = tqdm(
             train_loader,
-            desc=f"Epoch {epoch+1}/{EPOCHS}"
+            desc=f"Epoch {epoch + 1}/{EPOCHS}"
         )
 
         for images, labels in loop:
+
             images = images.to(device)
             labels = labels.to(device)
             optimizer.zero_grad()
@@ -121,12 +123,14 @@ def train():
             loss.backward()
             optimizer.step()
             train_loss += loss.item()
-
-            loop.set_postfix(
-                loss=loss.item()
-            )
+            pred = outputs.argmax(dim=1)
+            correct += (pred == labels).sum().item()
+            total += labels.size(0)
+            loop.set_postfix(loss=f"{loss.item():.4f}")
 
         train_loss /= len(train_loader)
+        train_acc = correct / total
+
         valid_loss, valid_acc = evaluate()
         scheduler.step(valid_loss)
 
@@ -134,10 +138,14 @@ def train():
         valid_loss_history.append(valid_loss)
         valid_acc_history.append(valid_acc)
 
+        current_lr = optimizer.param_groups[0]["lr"]
+
         print(
             f"\nTrain Loss : {train_loss:.4f}"
+            f" | Train Acc : {train_acc:.4f}"
             f" | Valid Loss : {valid_loss:.4f}"
             f" | Valid Acc : {valid_acc:.4f}"
+            f" | LR : {current_lr:.6f}"
         )
 
         if valid_acc > best_acc:
@@ -145,7 +153,7 @@ def train():
             patience = 0
             torch.save(
                 {
-                    "epoch": epoch,
+                    "epoch": epoch + 1,
                     "model_state_dict": model.state_dict(),
                     "optimizer_state_dict": optimizer.state_dict(),
                     "accuracy": best_acc
@@ -156,6 +164,7 @@ def train():
 
         else:
             patience += 1
+
         if patience >= PATIENCE:
             print("\nEarly Stopping")
             break
@@ -163,9 +172,8 @@ def train():
 
 # 결과 저장
 def save_history():
-
     df = pd.DataFrame({
-        "epoch": range(1, len(train_loss_history)+1),
+        "epoch": range(1, len(train_loss_history) + 1),
         "train_loss": train_loss_history,
         "valid_loss": valid_loss_history,
         "valid_accuracy": valid_acc_history
@@ -176,16 +184,25 @@ def save_history():
         index=False
     )
 
-    plt.figure(figsize=(10,4))
-    plt.subplot(1,2,1)
-    plt.plot(train_loss_history,label="Train")
-    plt.plot(valid_loss_history,label="Valid")
+    epochs = range(1, len(train_loss_history) + 1)
 
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, train_loss_history, label="Train")
+    plt.plot(epochs, valid_loss_history, label="Validation")
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
     plt.title("Loss")
     plt.legend()
-    plt.subplot(1,2,2)
-    plt.plot(valid_acc_history)
+
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, valid_acc_history)
+
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
     plt.title("Validation Accuracy")
+
     plt.tight_layout()
     plt.savefig(GRAPH_PATH)
     plt.close()
@@ -193,13 +210,13 @@ def save_history():
 
 # Main
 def main():
-
     train()
     save_history()
     print("\n학습 완료")
-    print(f"\nBest Model : {MODEL_PATH}")
-    print(f"History : {HISTORY_PATH}")
-    print(f"Graph : {GRAPH_PATH}")
+    print(f"Best Model : {MODEL_PATH}")
+    print(f"History CSV : {HISTORY_PATH}")
+    print(f"History Graph : {GRAPH_PATH}")
+
 
 if __name__ == "__main__":
     main()
