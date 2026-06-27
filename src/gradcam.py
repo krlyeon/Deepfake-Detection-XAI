@@ -11,6 +11,7 @@ from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 
 from dataset import test_dataset, test_transform
 from model import get_model
+import random
 
 
 
@@ -166,8 +167,12 @@ def get_save_dir(true_name, pred_name):
 # Main
 def main():
 
-    MAX_IMAGES = 10
-    for idx, (image_path, true_label) in enumerate(test_dataset.samples):
+    MAX_IMAGES = 500
+    samples = random.sample(
+    test_dataset.samples,
+    500
+    )
+    for idx, (image_path, true_label) in enumerate(samples):
         if idx >= MAX_IMAGES:
             break
 
