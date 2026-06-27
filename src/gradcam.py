@@ -11,6 +11,7 @@ from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
 
 from dataset import test_dataset, test_transform
 from model import get_model
+import matplotlib.pyplot as plt
 
 
 # 경로 설정
@@ -94,13 +95,71 @@ cam_image = show_cam_on_image(
     use_rgb=True
 )
 
+# Original + Grad-CAM 비교 이미지 저장
 
+def save_result_image(
+    original_image,
+    gradcam_image,
+    true_name,
+    pred_name,
+    confidence,
+    save_path
+):
+
+    result = "✓ Correct" if true_name == pred_name else "✗ Wrong"
+    fig, axes = plt.subplots(
+        1,
+        2,
+        figsize=(10, 5)
+    )
+
+    # Original
+    axes[0].imshow(original_image)
+    axes[0].set_title("Original", fontsize=15)
+    axes[0].axis("off")
+
+    # Grad-CAM
+    axes[1].imshow(gradcam_image)
+    axes[1].set_title("Grad-CAM", fontsize=15)
+    axes[1].axis("off")
+
+    # 결과 정보
+    info = (
+        f"Ground Truth : {true_name}\n"
+        f"Prediction   : {pred_name}\n"
+        f"Confidence   : {confidence*100:.2f}%\n"
+        f"Result       : {result}"
+    )
+
+    plt.figtext(
+        0.5,
+        0.01,
+        info,
+        ha="center",
+        va="bottom",
+        fontsize=11,
+        family="monospace"
+    )
+
+    plt.tight_layout(rect=[0, 0.15, 1, 1])
+
+    plt.savefig(
+        save_path,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
 # 저장
 save_path = OUTPUT_DIR / "sample_gradcam.png"
 
-cv2.imwrite(
-    str(save_path),
-    cv2.cvtColor(cam_image, cv2.COLOR_RGB2BGR)
+save_result_image(
+    original_image=image.resize((224, 224)),
+    gradcam_image=cam_image,
+    true_name=test_dataset.classes[true_label],
+    pred_name=test_dataset.classes[pred_label],
+    confidence=confidence,
+    save_path=save_path
 )
 
 print(f"True Label      : {test_dataset.classes[true_label]}")
