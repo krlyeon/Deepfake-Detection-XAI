@@ -104,14 +104,10 @@ def save_result_image(
 
 
 # Process One Image
-def process_image(
-    image_path,
-    true_label,
-    save_path
-):
+def process_image(image):
 
-    image = Image.open(image_path).convert("RGB")
-    image = image.resize((224, 224))
+    image = image.convert("RGB")
+    image = image.resize((224,224))
 
     input_tensor = test_transform(image).unsqueeze(0).to(device)
 
@@ -166,8 +162,6 @@ def get_save_dir(true_name, pred_name):
 
 # Main
 def main():
-
-    MAX_IMAGES = 500
     samples = random.sample(
     test_dataset.samples,
     500
@@ -177,13 +171,7 @@ def main():
             break
 
         true_name = test_dataset.classes[true_label]
-
-        pred_label, confidence, image, cam_image = process_image(
-            image_path=image_path,
-            true_label=true_label,
-            save_path=None
-        )
-
+        pred_label, confidence, image, cam_image = process_image_from_path(image_path)
         pred_name = test_dataset.classes[pred_label]
 
         save_dir = get_save_dir(
@@ -209,6 +197,12 @@ def main():
         )
 
     print("\nGrad-CAM 생성 완료!")
+
+# 배치용 함수
+def process_image_from_path(image_path):
+    image = Image.open(image_path)
+    return process_image(image)
+
 
 if __name__ == "__main__":
     main()
