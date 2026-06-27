@@ -13,7 +13,7 @@ from dataset import test_dataset, test_transform
 from model import get_model
 import random
 
-
+random.seed(42)
 
 # Path
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -160,6 +160,12 @@ def get_save_dir(true_name, pred_name):
         return REAL_WRONG_DIR
 
 
+# 배치용 함수
+def process_image_from_path(image_path):
+    image = Image.open(image_path)
+    return process_image(image)
+
+
 # Main
 def main():
     samples = random.sample(
@@ -167,8 +173,6 @@ def main():
     500
     )
     for idx, (image_path, true_label) in enumerate(samples):
-        if idx >= MAX_IMAGES:
-            break
 
         true_name = test_dataset.classes[true_label]
         pred_label, confidence, image, cam_image = process_image_from_path(image_path)
@@ -193,15 +197,10 @@ def main():
         )
 
         print(
-            f"[{idx+1}/{MAX_IMAGES}] {save_path.name}"
+            f"[{idx+1}/{len(samples)}] {save_path.name}"
         )
 
     print("\nGrad-CAM 생성 완료!")
-
-# 배치용 함수
-def process_image_from_path(image_path):
-    image = Image.open(image_path)
-    return process_image(image)
 
 
 if __name__ == "__main__":
