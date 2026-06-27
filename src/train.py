@@ -9,8 +9,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from dataset import train_loader, valid_loader
-from model import get_model
+from src.dataset import train_loader, valid_loader
+from src.model import get_model
 
 
 # 경로 설정

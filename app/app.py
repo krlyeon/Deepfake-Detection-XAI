@@ -1,6 +1,12 @@
+import sys
+from pathlib import Path
+
+# 경로 찾기
+BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
+
 import streamlit as st
 from PIL import Image
-
 from src.gradcam import process_image
 
 # Streamlit
